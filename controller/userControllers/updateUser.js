@@ -1,7 +1,7 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("cloudinary").v2;
-const User = require("../model/user");
+const User = require("../../model/user");
 
 exports.updateProfile = async (req, res) => {
   const { name, email } = req.body;

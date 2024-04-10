@@ -21,14 +21,7 @@ const userSchema = new mongoose.Schema({
 
   profile_picture: {
     type: String,
-    required: [true, "Profile picture URL is required."],
-    validate: {
-      validator: function (value) {
-        return /^(ftp|http|https):\/\/[^ "]+$/.test(value);
-      },
-      message: (props) =>
-        `${props.value} is not a valid URL for profile picture!`,
-    },
+    
   },
 
   password: {

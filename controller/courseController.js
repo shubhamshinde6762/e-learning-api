@@ -1,3 +1,5 @@
+const Enrollment = require('../model/enrollment');
+const User = require('../model/user');
 const Course = require("../model/course");
 
 exports.getCourses = async (req, res) => {
@@ -24,10 +26,11 @@ exports.getCourses = async (req, res) => {
 exports.createOrUpdateCourse = async (req, res) => {
   const { title, description, pricings, category, level, popularity } =
     req.body;
-  const { courseId } = req.params; // If courseId is provided in URL params, it's an update operation
+    console.log(123)
 
-  try {
+  const { courseId } = req.params; // If courseId is provided in URL params, it's an update operation
     let course;
+  try {
 
     if (courseId) {
       course = await Course.findById(courseId);
@@ -64,17 +67,23 @@ exports.createOrUpdateCourse = async (req, res) => {
   }
 };
 
+
 exports.deleteCourse = async (req, res) => {
   const { courseId } = req.params;
 
   try {
-    const course = await Course.findById(courseId);
+    const course = await Course.findOneAndDelete({ _id: courseId });
 
     if (!course) {
       return res.status(404).json({ message: "Course not found." });
     }
 
-    await course.remove();
+    await User.updateMany(
+      { enrolledCourses: courseId },
+      { $pull: { enrolledCourses: courseId } }
+    );
+
+    await Enrollment.deleteMany({ course: courseId });
 
     res.status(200).json({ message: "Course deleted successfully." });
   } catch (error) {
@@ -82,3 +91,4 @@ exports.deleteCourse = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+

@@ -1,6 +1,6 @@
-const Enrollment = require("../models/enrollment");
-const User = require("../models/user");
-const Course = require("../models/course");
+const Enrollment = require("../model/enrollment");
+const User = require("../model/user");
+const Course = require("../model/course");
 
 exports.enrollUser = async (req, res) => {
   try {
@@ -11,7 +11,7 @@ exports.enrollUser = async (req, res) => {
       user: userId,
       course: courseId,
     });
-
+ 
     if (existingEnrollment) {
       return res
         .status(400)
@@ -42,7 +42,7 @@ exports.enrollUser = async (req, res) => {
 
 exports.getEnrolledCourses = async (req, res) => {
   try {
-    const userId = req.params.user_id;
+    const userId = req.params.user_id || req.user._id;
 
     const user = await User.findById(userId);
     if (!user) {

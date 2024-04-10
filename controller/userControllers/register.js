@@ -1,7 +1,10 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("cloudinary").v2;
-const User = require("../model/user");
+const User = require("../../model/user");
+const Resend = require("resend").Resend;
+require("dotenv").config();
+const resend = new Resend(process.env.RESEND_KEY);
 
 exports.registerUser = async (req, res) => {
   try {
@@ -18,6 +21,15 @@ exports.registerUser = async (req, res) => {
 
     let url = "";
 
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one digit.",
+        });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
 
     if (req.files && req.files.file) {
@@ -45,8 +57,7 @@ exports.registerUser = async (req, res) => {
           }),
       ]);
     }
-
-    let user = new User({
+    const user = await User.create({
       name,
       email,
       password: hashedPassword,
@@ -54,7 +65,7 @@ exports.registerUser = async (req, res) => {
       profile_picture: url,
     });
 
-    await user.save();
+    console.log(123);
 
     const payload = {
       user: {
@@ -67,6 +78,23 @@ exports.registerUser = async (req, res) => {
     });
 
     res.status(200).json({ token });
+
+    resend.emails
+      .send({
+        from: "Acme <onboarding@resend.dev>",
+        to: [email],
+        subject: "Thank You for Registering",
+        html: `<div style="background-color: #f4f4f4; padding: 20px;">
+                <h2 style="color: #333333;">Thank You for Registering!</h2>
+                <p style="color: #333333;">We're delighted to have you join our community. Your registration was successful.</p>
+                <p style="color: #333333;">You can now access our platform and explore a wide range of courses to enhance your skills and knowledge.</p>
+                <p style="color: #333333;">If you have any questions or need assistance, feel free to contact us.</p>
+                <p style="color: #333333;">Happy learning!</p>
+            </div>`,
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   } catch (error) {
     console.error(error.message);
 
